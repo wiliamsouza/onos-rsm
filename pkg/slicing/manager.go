@@ -18,14 +18,13 @@ import (
 	"github.com/onosproject/onos-lib-go/pkg/logging"
 	"github.com/onosproject/onos-rsm/pkg/nib/rnib"
 	"github.com/onosproject/onos-rsm/pkg/nib/uenib"
-	"github.com/onosproject/onos-rsm/pkg/northbound"
+
 	"github.com/onosproject/onos-rsm/pkg/southbound/e2"
 )
 
 var log = logging.GetLogger()
 
 type Manager struct {
-	rsmMsgCh              chan *northbound.RsmMsg
 	ctrlReqChsSliceCreate map[string]chan *e2.CtrlMsg
 	ctrlReqChsSliceUpdate map[string]chan *e2.CtrlMsg
 	ctrlReqChsSliceDelete map[string]chan *e2.CtrlMsg
@@ -45,7 +44,7 @@ func NewManager(opts ...Option) Manager {
 	}
 
 	return Manager{
-		rsmMsgCh:              options.Chans.RsmMsgCh,
+
 		ctrlReqChsSliceCreate: options.Chans.CtrlReqChsSliceCreate,
 		ctrlReqChsSliceUpdate: options.Chans.CtrlReqChsSliceUpdate,
 		ctrlReqChsSliceDelete: options.Chans.CtrlReqChsSliceDelete,
@@ -57,43 +56,7 @@ func NewManager(opts ...Option) Manager {
 	}
 }
 
-func (m *Manager) Run(ctx context.Context) {
-	go m.DispatchNbiMsg(ctx)
-}
-
-func (m *Manager) DispatchNbiMsg(ctx context.Context) {
-	log.Info("Run nbi msg dispatcher")
-	for msg := range m.rsmMsgCh {
-		log.Debugf("Received message from NBI: %v", msg)
-		var ack northbound.Ack
-		var err error
-		switch msg.Message.(type) {
-		case *rsmapi.CreateSliceRequest:
-			err = m.handleNbiCreateSliceRequest(ctx, msg.Message.(*rsmapi.CreateSliceRequest), msg.NodeID)
-		case *rsmapi.UpdateSliceRequest:
-			err = m.handleNbiUpdateSliceRequest(ctx, msg.Message.(*rsmapi.UpdateSliceRequest), msg.NodeID)
-		case *rsmapi.DeleteSliceRequest:
-			err = m.handleNbiDeleteSliceRequest(ctx, msg.Message.(*rsmapi.DeleteSliceRequest), msg.NodeID)
-		case *rsmapi.SetUeSliceAssociationRequest:
-			err = m.handleNbiSetUeSliceAssociationRequest(ctx, msg.Message.(*rsmapi.SetUeSliceAssociationRequest), msg.NodeID)
-		default:
-			err = fmt.Errorf("unknown msg type: %v", msg)
-		}
-		if err != nil {
-			ack = northbound.Ack{
-				Success: false,
-				Reason:  err.Error(),
-			}
-		} else {
-			ack = northbound.Ack{
-				Success: true,
-			}
-		}
-		msg.AckCh <- ack
-	}
-}
-
-func (m *Manager) handleNbiCreateSliceRequest(ctx context.Context, req *rsmapi.CreateSliceRequest, nodeID topoapi.ID) error {
+func (m *Manager) HandleNbiCreateSliceRequest(ctx context.Context, req *rsmapi.CreateSliceRequest, nodeID topoapi.ID) error {
 	log.Infof("Called Create Slice: %v", req)
 	sliceID, err := strconv.Atoi(req.SliceId)
 	if err != nil {
@@ -192,7 +155,7 @@ func (m *Manager) handleNbiCreateSliceRequest(ctx context.Context, req *rsmapi.C
 	return nil
 }
 
-func (m *Manager) handleNbiUpdateSliceRequest(ctx context.Context, req *rsmapi.UpdateSliceRequest, nodeID topoapi.ID) error {
+func (m *Manager) HandleNbiUpdateSliceRequest(ctx context.Context, req *rsmapi.UpdateSliceRequest, nodeID topoapi.ID) error {
 	log.Infof("Called Update Slice: %v", req)
 	sliceID, err := strconv.Atoi(req.SliceId)
 	if err != nil {
@@ -322,7 +285,7 @@ func (m *Manager) handleNbiUpdateSliceRequest(ctx context.Context, req *rsmapi.U
 	return nil
 }
 
-func (m *Manager) handleNbiDeleteSliceRequest(ctx context.Context, req *rsmapi.DeleteSliceRequest, nodeID topoapi.ID) error {
+func (m *Manager) HandleNbiDeleteSliceRequest(ctx context.Context, req *rsmapi.DeleteSliceRequest, nodeID topoapi.ID) error {
 	log.Infof("Called Delete Slice: %v", req)
 	sliceID, err := strconv.Atoi(req.SliceId)
 	if err != nil {
@@ -411,7 +374,7 @@ func (m *Manager) handleNbiDeleteSliceRequest(ctx context.Context, req *rsmapi.D
 	return nil
 }
 
-func (m *Manager) handleNbiSetUeSliceAssociationRequest(ctx context.Context, req *rsmapi.SetUeSliceAssociationRequest, nodeID topoapi.ID) error {
+func (m *Manager) HandleNbiSetUeSliceAssociationRequest(ctx context.Context, req *rsmapi.SetUeSliceAssociationRequest, nodeID topoapi.ID) error {
 	log.Infof("Called SetUeSliceAssociation: %v", req)
 	var err error
 	duNodeID := req.E2NodeId

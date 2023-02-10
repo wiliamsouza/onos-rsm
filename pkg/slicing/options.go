@@ -7,7 +7,7 @@ package slicing
 import (
 	"github.com/onosproject/onos-rsm/pkg/nib/rnib"
 	"github.com/onosproject/onos-rsm/pkg/nib/uenib"
-	"github.com/onosproject/onos-rsm/pkg/northbound"
+
 	"github.com/onosproject/onos-rsm/pkg/southbound/e2"
 )
 
@@ -18,8 +18,6 @@ type Options struct {
 }
 
 type Channels struct {
-	RsmMsgCh chan *northbound.RsmMsg
-
 	CtrlReqChsSliceCreate map[string]chan *e2.CtrlMsg
 
 	CtrlReqChsSliceUpdate map[string]chan *e2.CtrlMsg
@@ -64,12 +62,6 @@ func WithCtrlReqChs(ctrlReqChsSliceCreate map[string]chan *e2.CtrlMsg,
 		options.Chans.CtrlReqChsSliceUpdate = ctrlReqChsSliceUpdate
 		options.Chans.CtrlReqChsSliceDelete = ctrlReqChsSliceDelete
 		options.Chans.CtrlReqChsUeAssociate = ctrlReqChsUeAssociate
-	})
-}
-
-func WithNbiReqChs(rsmMsgCh chan *northbound.RsmMsg) Option {
-	return newOption(func(options *Options) {
-		options.Chans.RsmMsgCh = rsmMsgCh
 	})
 }
 
