@@ -64,7 +64,7 @@ func NewManager(config Config) *Manager {
 		slicing.WithRnibClient(rnibClient),
 		slicing.WithUenibClient(uenibClient),
 		slicing.WithCtrlReqChs(ctrlReqChsSliceCreate, ctrlReqChsSliceUpdate, ctrlReqChsSliceDelete, ctrlReqChsUeAssociate),
-		slicing.WithNbiReqChs(rsmReqCh),
+
 		slicing.WithAckTimer(config.AckTimer),
 	)
 
@@ -139,8 +139,6 @@ func (m *Manager) start() error {
 		return err
 	}
 
-	go m.slicingManager.Run(context.Background())
-
 	return nil
 }
 
@@ -157,7 +155,7 @@ func (m *Manager) startNorthboundServer() error {
 		true,
 		northbound.SecurityConfig{}))
 
-	s.AddService(nbi.NewService(m.rnibClient, m.uenibClient, m.rsmReqCh))
+	s.AddService(nbi.NewService(m.rnibClient, m.uenibClient, m.slicingManager))
 
 	doneCh := make(chan error)
 	go func() {
